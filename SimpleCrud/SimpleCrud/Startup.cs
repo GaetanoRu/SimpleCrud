@@ -1,4 +1,5 @@
 using FluentValidation.AspNetCore;
+using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -13,9 +14,13 @@ using SimpleCrud.BusinessLayer.MapperProfiles;
 using SimpleCrud.BusinessLayer.Services;
 using SimpleCrud.BusinessLayer.Validations;
 using SimpleCrud.DataAccessLayer;
+using SimpleCrud.SwaggerDocumentation;
+using Swashbuckle.AspNetCore.Filters;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
@@ -52,9 +57,13 @@ namespace SimpleCrud
 
             services.AddScoped<ICustomerService, CustomerService>();
 
-            services.AddSwaggerGen(c =>
+            services.AddSwaggerGen(options =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo
+                options.OperationFilter<DefaultResponseOperationFilter>();
+                options.ExampleFilters();
+
+
+                options.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Title = "SimpleCrud",
                     Version = "v1",
@@ -66,8 +75,17 @@ namespace SimpleCrud
                         Email = "gaetano-russo90@hotmail.it"
                     }
                 });
+
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                options.IncludeXmlComments(xmlPath);
+
+            }).AddFluentValidationRulesToSwagger(options =>
+            {
+                options.SetNotNullableIfMinLengthGreaterThenZero = true;
             });
 
+            services.AddSwaggerExamplesFromAssemblies(Assembly.GetEntryAssembly());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

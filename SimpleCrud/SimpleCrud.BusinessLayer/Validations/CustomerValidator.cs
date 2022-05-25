@@ -11,15 +11,20 @@ namespace SimpleCrud.BusinessLayer.Validations
 {
     public class CustomerValidator : AbstractValidator<SaveCustomerRequest>
     {
+        private const string validatePhoneNumber = @"^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$";
         public CustomerValidator()
         {
+
             RuleFor(c => c.FirstName)
+                .Cascade(CascadeMode.Stop)
+                .MaximumLength(50)
                 .NotEmpty()
                 .WithMessage("{PropertyName} is required")
                 .Must(IsValidFirstAndLastName).WithMessage("{PropertyName} should be all letters");
 
 
             RuleFor(c => c.LastName)
+                .MaximumLength(50)
                 .NotEmpty()
                 .WithMessage("{PropertyName} is required")
                 .Must(IsValidFirstAndLastName).WithMessage("{PropertyName} should be all letters");
@@ -34,17 +39,19 @@ namespace SimpleCrud.BusinessLayer.Validations
                 .MaximumLength(50);
 
             RuleFor(c => c.PostalCode)
-                .MaximumLength(5).WithMessage("The postcode must consist of 5 digits")
+                .Cascade(CascadeMode.Stop)
+                .MinimumLength(5).WithMessage("The postcode must consist of 5 digits")
                 .Must(CheckValidPostalCodeLenghtAndNumber).WithMessage("The Postal Code should only have numeric values");
 
             RuleFor(c => c.Email)
-                .NotEmpty()
+                .MaximumLength(50)
+                .NotEmpty().WithMessage("{PropertyName} is required field")
                 .EmailAddress().WithMessage("Email is not valid");
 
 
             RuleFor(c => c.Phone)
-                .NotEmpty().WithMessage("{PropertyName} is required")
-                .Matches(@"^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$").WithMessage("{PropertyName} format is not valid");
+                .NotEmpty().WithMessage("{PropertyName} is required field")
+                .Matches(validatePhoneNumber).WithMessage("{PropertyName} format is not valid");
         }
 
         private static bool CheckValidPostalCodeLenghtAndNumber(string postalCode)
